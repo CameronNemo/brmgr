@@ -1,0 +1,18 @@
+description "LXC Network"
+
+start on starting lxc or starting lxc-instance
+stop on stopped lxc
+
+pre-start script
+	mkdir -p /run/lxc
+	exec lxc-bridge-up
+end script
+
+exec lxc-dnsmasq --pid-file=/run/lxc/dnsmasq.pid
+
+post-start exec touch /run/lxc/network_up
+
+post-stop script
+	lxc-bridge-down
+	exec rm -f /run/lxc/dnsmasq.pid /run/lxc/network_up
+end script

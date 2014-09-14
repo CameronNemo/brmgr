@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+LXC_BRIDGE="lxcbr0"
+LXC_ADDR="10.0.3.1"
+LXC_NETMASK="255.255.255.0"
+LXC_NETWORK="10.0.3.0/24"
+
+[ -f /etc/lxc-net ] && . /etc/lxc-net
+
+ls /sys/class/net/${LXC_BRIDGE}/brif/* > /dev/null 2>&1 && {
+	echo "$LXC_BRIDGE has attached interfaces, not shutting it down"
+	exit 1
+}
+
+# Tear down bridge
+if [ -d /sys/class/net/${LXC_BRIDGE} ]; then
+	use_iptables_lock="-w"
+	iptables -w -L -n > /dev/null 2>&1 || use_iptables_lock=""
+	ifconfig ${LXC_BRIDGE} down
+	iptables $use_iptables_lock -D INPUT -i ${LXC_BRIDGE} -p udp --dport 67 -j ACCEPT
+	iptables $use_iptables_lock -D INPUT -i ${LXC_BRIDGE} -p tcp --dport 67 -j ACCEPT
+	iptables $use_iptables_lock -D INPUT -i ${LXC_BRIDGE} -p udp --dport 53 -j ACCEPT
+	iptables $use_iptables_lock -D INPUT -i ${LXC_BRIDGE} -p tcp --dport 53 -j ACCEPT
+	iptables $use_iptables_lock -D FORWARD -i ${LXC_BRIDGE} -j ACCEPT
+	iptables $use_iptables_lock -D FORWARD -o ${LXC_BRIDGE} -j ACCEPT
+	iptables $use_iptables_lock -t nat -D POSTROUTING -s ${LXC_NETWORK} ! -d ${LXC_NETWORK} -j MASQUERADE || true
+	iptables $use_iptables_lock -t mangle -D POSTROUTING -o ${LXC_BRIDGE} -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
+	brctl delbr ${LXC_BRIDGE}
+fi

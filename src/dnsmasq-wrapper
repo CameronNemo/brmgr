@@ -1,0 +1,16 @@
+#!/bin/sh -e
+
+LXC_BRIDGE="lxcbr0"
+LXC_ADDR="10.0.3.1"
+LXC_DHCP_RANGE="10.0.3.2,10.0.3.254"
+LXC_DHCP_MAX="253"
+LXC_DHCP_CONFILE=""
+
+[ -f /etc/lxc-net ] && . /etc/lxc-net
+
+LXC_DOMAIN_ARG=""
+test -n "$LXC_DOMAIN" && {
+	LXC_DOMAIN_ARG="-s $LXC_DOMAIN -S /$LXC_DOMAIN/"
+}
+
+exec dnsmasq $LXC_DOMAIN_ARG -k -u lxc-dnsmasq --strict-order --bind-interfaces --conf-file=${LXC_DHCP_CONFILE} --listen-address ${LXC_ADDR} --dhcp-range ${LXC_DHCP_RANGE} --dhcp-lease-max=${LXC_DHCP_MAX} --dhcp-no-override --except-interface=lo --interface=${LXC_BRIDGE} --dhcp-leasefile=/var/lib/misc/dnsmasq.${LXC_BRIDGE}.leases --dhcp-authoritative $@

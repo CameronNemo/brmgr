@@ -1,0 +1,16 @@
+[Unit]
+Description=LXC Network
+After=network.target
+Before=lxc.service lxc@.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir /run/lxc
+ExecStartPre=/usr/bin/lxc-bridge-up
+ExecStart=/usr/bin/lxc-dnsmasq --pid-file /run/lxc/dnsmasq.pid
+ExecStartPost=/usr/bin/touch /run/lxc/network_up
+ExecStopPost=/usr/bin/lxc-bridge-down
+ExecStopPost=/bin/rm -f /run/lxc/dnsmasq.pid /run/lxc/network_up
+
+[Install]
+WantedBy=lxc.service lxc@.service
