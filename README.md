@@ -1,3 +1,5 @@
+IMPORTANT: upstream development has made this obsolete, please use the upstart jobs, systemd services, etc. from github.com/lxc/lxc
+
 #lxc-net
 
 This is a set of shell scripts to set up and tear down the bridge inteface, as well as run dnsmasq on the interface for routing purposes.
