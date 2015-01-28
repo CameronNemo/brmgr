@@ -7,7 +7,7 @@ test -e /lib/systemd/system || mkdir -p /lib/systemd/system
 test -e /etc/init || mkdir -p /etc/init
 test -e /etc/dnsmasq.d || mkdir -p /etc/dnsmasq.d
 
-test -d "$BINDIR || { echo "ERROR: $BINDIR is not a directory"; exit 1; }
+test -d "$BINDIR" || { echo "ERROR: $BINDIR is not a directory"; exit 1; }
 
 cp src/dnsmasq-wrapper $BINDIR/lxc-dnsmasq
 cp src/bridge-up $BINDIR/lxc-bridge-up
