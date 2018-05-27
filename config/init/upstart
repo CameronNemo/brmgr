@@ -5,14 +5,14 @@ stop on stopped lxc
 
 pre-start script
 	mkdir -p /run/lxc
-	exec lxc-bridge-up
+	exec /usr/local/lib/lxc-net/bridge-up
 end script
 
-exec lxc-dnsmasq --pid-file=/run/lxc/dnsmasq.pid
+exec /usr/local/lib/lxc-net/dnsmasq --pid-file=/run/lxc/dnsmasq.pid
 
 post-start exec touch /run/lxc/network_up
 
 post-stop script
-	lxc-bridge-down
+	/usr/local/lib/lxc-net/bridge-down
 	exec rm -f /run/lxc/dnsmasq.pid /run/lxc/network_up
 end script

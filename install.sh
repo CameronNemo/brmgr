@@ -1,19 +1,32 @@
 #!/bin/sh -e
 
-test -n "$BINDIR" || BINDIR=/usr/local/bin
+test -n "$install_prefix" || install_prefix=/usr/local
+test -n "$systemdunitdir" || systemdunitdir=/lib/systemd/system
+test -n "$sysconfdir" || sysconfdir=/etc
 
-test -e "$BINDIR" || mkdir -p $BINDIR
-test -e /lib/systemd/system || mkdir -p /lib/systemd/system
-test -e /etc/init || mkdir -p /etc/init
-test -e /etc/dnsmasq.d || mkdir -p /etc/dnsmasq.d
+bindir="${install_prefix}/lib/lxc-net"
+lxcconfdir="${install_prefix}/share/lxc-net"
 
-test -d "$BINDIR" || { echo "ERROR: $BINDIR is not a directory"; exit 1; }
+ensure_dir() {
+	local dir="$1"
+	test -e "$dir" || mkdir -p "$dir"
+	test -d "$dir" || { echo "ERROR: $dir is not a directory"; exit 1; }
+}
 
-cp src/dnsmasq-wrapper $BINDIR/lxc-dnsmasq
-cp src/bridge-up $BINDIR/lxc-bridge-up
-cp src/bridge-down $BINDIR/lxc-bridge-down
+ensure_dir "$bindir"
+ensure_dir "$lxcconfdir"
+ensure_dir "$systemdunitdir"
+ensure_dir "$sysconfdir"/init
+ensure_dir "$sysconfdir"/dnsmasq.d
 
-cp config/init/upstart /etc/init/
-cp config/init/systemd /lib/systemd/system/
-cp config/lxc-net /etc/
-cp config/dnsmasq.d/lxc-net /etc/dnsmasq.d/
+cp src/dnsmasq-wrapper "$bindir"/dnsmasq
+cp src/bridge-up "$bindir"/bridge-up
+cp src/bridge-down "$bindir"/bridge-down
+
+cp config/lxc.container.conf "$lxcconfdir"/lxc-net.conf
+
+cp config/init/systemd "$systemdunitdir"/lxc-net.service
+
+cp config/init/upstart "$sysconfdir"/init/lxc-net.conf
+cp config/lxc-net "$sysconfdir"/
+cp config/dnsmasq.d/lxc-net "$sysconfdir"/dnsmasq.d/

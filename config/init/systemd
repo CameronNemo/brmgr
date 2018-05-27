@@ -6,10 +6,10 @@ Before=lxc.service lxc@.service
 [Service]
 Type=simple
 ExecStartPre=/bin/mkdir -p /run/lxc
-ExecStartPre=/usr/local/bin/lxc-bridge-up
-ExecStart=/usr/local/bin/lxc-dnsmasq --pid-file=/run/lxc/dnsmasq.pid
+ExecStartPre=/usr/local/lib/lxc-net/bridge-up
+ExecStart=/usr/local/lib/lxc-net/dnsmasq --pid-file=/run/lxc/dnsmasq.pid
 ExecStartPost=/usr/bin/touch /run/lxc/network_up
-ExecStopPost=/usr/local/bin/lxc-bridge-down
+ExecStopPost=/usr/local/lib/lxc-net/bridge-down
 ExecStopPost=/bin/rm -f /run/lxc/dnsmasq.pid /run/lxc/network_up
 
 [Install]
