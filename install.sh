@@ -30,3 +30,5 @@ cp config/init/systemd "$systemdunitdir"/lxc-net.service
 cp config/init/upstart "$sysconfdir"/init/lxc-net.conf
 cp config/lxc-net "$sysconfdir"/
 cp config/dnsmasq.d/lxc-net "$sysconfdir"/dnsmasq.d/
+
+useradd --system --user-group --shell /bin/false --home-dir /nonexistent lxc-dnsmasq
