@@ -4,7 +4,7 @@
 set -e
 
 function die() {
-	echo $(basename ${0}) $@
+	echo "$(basename ${0}):" $@
 	exit 1
 }
 

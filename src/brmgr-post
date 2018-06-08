@@ -4,7 +4,7 @@
 set -e
 
 function die() {
-        echo $(basename ${0}) $@
+        echo "$(basename ${0}):" $@
         exit 1
 }
 
@@ -16,23 +16,28 @@ etc="/etc/brmgr.conf"
 test -n "$bridge" -a -n "$network" || die \
         "missing config variable(s)"
 
-ls /sys/class/net/${bridge}/brif/* > /dev/null 2>&1 || die \
-	"$bridge has attached interfaces, not shutting it down"
+if ls /sys/class/net/${bridge}/brif/* >/dev/null 2>&1; then
+	die "$bridge has attached interfaces, not shutting it down"
+fi
 
 # Tear down bridge
 if [ -d /sys/class/net/${bridge} ]; then
-	use_iptables_lock="-w"
-	iptables -w -L -n > /dev/null 2>&1 || use_iptables_lock=""
 	ip link set ${bridge} down
-	iptables $use_iptables_lock -D INPUT -i ${bridge} -p udp --dport 67 -j ACCEPT
-	iptables $use_iptables_lock -D INPUT -i ${bridge} -p tcp --dport 67 -j ACCEPT
-	iptables $use_iptables_lock -D INPUT -i ${bridge} -p udp --dport 53 -j ACCEPT
-	iptables $use_iptables_lock -D INPUT -i ${bridge} -p tcp --dport 53 -j ACCEPT
-	iptables $use_iptables_lock -D FORWARD -i ${bridge} -j ACCEPT
-	iptables $use_iptables_lock -D FORWARD -o ${bridge} -j ACCEPT
-	iptables $use_iptables_lock -t nat -D POSTROUTING -s ${network} ! -d ${network} \
-		-j MASQUERADE || true
-	iptables $use_iptables_lock -t mangle -D POSTROUTING -o ${bridge} -p udp -m udp \
-		--dport 68 -j CHECKSUM --checksum-fill
+	ipt_lock="-w"
+	iptables -w -L -n > /dev/null 2>&1 || ipt_lock=""
+	# if some of the iptables commands fail that is okay,
+	# we still want to delete the bridge
+	{
+		iptables $ipt_lock -D INPUT -i ${bridge} -p udp --dport 67 -j ACCEPT
+		iptables $ipt_lock -D INPUT -i ${bridge} -p tcp --dport 67 -j ACCEPT
+		iptables $ipt_lock -D INPUT -i ${bridge} -p udp --dport 53 -j ACCEPT
+		iptables $ipt_lock -D INPUT -i ${bridge} -p tcp --dport 53 -j ACCEPT
+		iptables $ipt_lock -D FORWARD -i ${bridge} -j ACCEPT
+		iptables $ipt_lock -D FORWARD -o ${bridge} -j ACCEPT
+		iptables $ipt_lock -t nat -D POSTROUTING -s ${network} ! -d ${network} \
+			-j MASQUERADE || true
+		iptables $ipt_lock -t mangle -D POSTROUTING -o ${bridge} -p udp -m udp \
+			--dport 68 -j CHECKSUM --checksum-fill
+	} || true
 	brctl delbr ${bridge}
 fi
