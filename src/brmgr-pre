@@ -1,0 +1,42 @@
+#!/bin/sh
+# SPDX-license-identifier: LGPL-2.1
+
+set -e
+
+function die() {
+        echo $(basename ${0}) $@
+        exit 1
+}
+
+etc="/etc/brmgr.conf"
+
+[ -r "$etc" ] && . "$etc" || die \
+        "could not read configuration file: $etc"
+
+test -n "$bridge" -a -n "$addr" -a -n "$netmask" -a -n "$network" || die \
+        "missing config variable(s)"
+
+ipt_lock="-w"
+iptables -w -l -n > /dev/null 2>&1 || ipt_lock=""
+
+test -d /sys/class/net/${bridge} || die \
+	"someone else is handling the bridge, not starting"
+
+brctl addbr ${bridge} || die \
+	"missing bridge support in kernel"
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+ip addr add ${addr}/${netmask} dev ${bridge}
+ip link set ${bridge} up
+# ${addr} netmask ${netmask} up
+
+iptables $ipt_lock -i INPUT -i ${bridge} -p udp --dport 67 -j ACCEPT
+iptables $ipt_lock -i INPUT -i ${bridge} -p tcp --dport 67 -j ACCEPT
+iptables $ipt_lock -i INPUT -i ${bridge} -p udp --dport 53 -j ACCEPT
+iptables $ipt_lock -i INPUT -i ${bridge} -p tcp --dport 53 -j ACCEPT
+iptables $ipt_lock -i FORWARD -i ${bridge} -j ACCEPT
+iptables $ipt_lock -i FORWARD -o ${bridge} -j ACCEPT
+iptables $ipt_lock -t nat -a postrouting -s ${network} ! -d ${network} -j MASQUERADE
+iptables $ipt_lock -t mangle -a postrouting -o ${bridge} -p udp -m udp \
+	--dport 68 -j CHECKSUM --checksum-fill
