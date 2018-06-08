@@ -1,0 +1,12 @@
+ipv6
+    echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+    echo 0 > /proc/sys/net/ipv6/conf/${bridge}/autoconf
+    --dhcp-range=${addr6},ra-only --listen-address ${addr6}
+    echo 0 > /proc/sys/net/ipv6/conf/${bridge}/accept_dad || true
+    ip6tables $ipt_lock -t nat -A POSTROUTING -s ${network6} ! -d ${network6} -j MASQUERADE
+mac address
+    ip link set dev ${bridge} address ${bridge_mac}
+brctl -> ip
+    ip link add dev ${bridge} type bridge
+    ip link delete ${bridge}
+    ip addr flush dev ${bridge} # before set down
