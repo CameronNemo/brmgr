@@ -5,7 +5,7 @@ set -e
 
 function die() {
 	echo "$(basename ${0}):" $@
-	exit 1
+	exit 2
 }
 
 etc="/etc/brmgr.conf"
@@ -19,7 +19,7 @@ test -n "$bridge" -a -n "$addr" || die \
 domain_arg=""
 test -z "$domain" || domain_arg="-s $domain -s /$domain/"
 
-exec dnsmasq $domain_arg -koz -u nobody \
-	-i=${bridge} -I=lo -a=${addr} \
-	-C=${dhcp_confile} -F=${dhcp_range} -X=${dhcp_max} -K --dhcp-no-override \
-	-l=/var/lib/misc/dnsmasq.${bridge}.leases $@
+echo dnsmasq $domain_arg -k -o -z -u nobody \
+	-i ${bridge} -I lo -a ${addr} \
+	--conf-file="${dhcp_conffile}" -F "${dhcp_range}" -X ${dhcp_max} -K --dhcp-no-override \
+	-l /var/lib/misc/dnsmasq.${bridge}.leases $@
