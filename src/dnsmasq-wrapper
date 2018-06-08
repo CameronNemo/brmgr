@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+#  SPDX-License-Identifier: LGPL-2.1
+
 LXC_BRIDGE="lxcbr0"
 LXC_ADDR="10.0.3.1"
 LXC_DHCP_RANGE="10.0.3.2,10.0.3.254"
@@ -13,4 +15,4 @@ test -n "$LXC_DOMAIN" && {
 	LXC_DOMAIN_ARG="-s $LXC_DOMAIN -S /$LXC_DOMAIN/"
 }
 
-exec dnsmasq $LXC_DOMAIN_ARG -k -u lxc-dnsmasq --strict-order --bind-interfaces --conf-file=${LXC_DHCP_CONFILE} --listen-address ${LXC_ADDR} --dhcp-range ${LXC_DHCP_RANGE} --dhcp-lease-max=${LXC_DHCP_MAX} --dhcp-no-override --except-interface=lo --interface=${LXC_BRIDGE} --dhcp-leasefile=/var/lib/misc/dnsmasq.${LXC_BRIDGE}.leases --dhcp-authoritative $@
+exec dnsmasq $LXC_DOMAIN_ARG -k -u nobody --strict-order --bind-interfaces --conf-file=${LXC_DHCP_CONFILE} --listen-address ${LXC_ADDR} --dhcp-range ${LXC_DHCP_RANGE} --dhcp-lease-max=${LXC_DHCP_MAX} --dhcp-no-override --except-interface=lo --interface=${LXC_BRIDGE} --dhcp-leasefile=/var/lib/misc/dnsmasq.${LXC_BRIDGE}.leases --dhcp-authoritative $@
