@@ -4,8 +4,8 @@ test -n "$install_prefix" || install_prefix=/usr/local
 test -n "$systemdunitdir" || systemdunitdir=/lib/systemd/system
 test -n "$sysconfdir" || sysconfdir=/etc
 
-bindir="${install_prefix}/lib/lxc-net"
-lxcconfdir="${install_prefix}/share/lxc-net"
+bindir="${install_prefix}/lib/brmgr"
+lxcconfdir="${install_prefix}/share/brmgr"
 
 ensure_dir() {
 	local dir="$1"
@@ -19,16 +19,16 @@ ensure_dir "$systemdunitdir"
 ensure_dir "$sysconfdir"/init
 ensure_dir "$sysconfdir"/dnsmasq.d
 
-cp src/dnsmasq-wrapper "$bindir"/dnsmasq
-cp src/bridge-up "$bindir"/bridge-up
-cp src/bridge-down "$bindir"/bridge-down
+for f in src/*; do
+	cp "$f" "$bindir"
+done
 
-cp config/lxc.container.conf "$lxcconfdir"/lxc-net.conf
+for f in config/brmgr.service config/brmgr.upstart; do
+	sed "s|@bindir@|${bindir}|" "$f" >"${f}.out"
+done
 
-cp config/init/systemd "$systemdunitdir"/lxc-net.service
-
-cp config/init/upstart "$sysconfdir"/init/lxc-net.conf
-cp config/lxc-net "$sysconfdir"/
-cp config/dnsmasq.d/lxc-net "$sysconfdir"/dnsmasq.d/
-
-useradd --system --user-group --shell /bin/false --home-dir /nonexistent lxc-dnsmasq
+cp config/lxc.container.conf "$lxcconfdir"
+cp config/brmgr.service.out "$systemdunitdir"/brmgr.service
+cp config/brmgr.upstart.out "$sysconfdir"/init/brmgr.conf
+cp config/brmgr.conf "$sysconfdir"
+cp config/dnsmasq.d/brmgr.conf "$sysconfdir"/dnsmasq.d/

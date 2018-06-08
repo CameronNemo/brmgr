@@ -1,12 +1,8 @@
-description "LXC Network"
+description "brmgr: manage bridge devices"
 
-start on starting lxc or starting lxc-instance
-stop on stopped lxc
+start on static-network-up or runlevel [2345]
+stop on unmounted-remote-filesystems
 
-pre-start exec /usr/local/lib/lxc-net/bridge-up
-exec /usr/local/lib/lxc-net/dnsmasq --pid-file
-post-start exec touch /run/lxc/network_up
-post-stop script
-	/usr/local/lib/lxc-net/bridge-down
-	exec rm -f /run/lxc/network_up
-end script
+pre-start exec @bindir@/brmgr-up
+exec @bindir@/brmgr --pid-file
+post-stop exec @bindir@/brmgr-down

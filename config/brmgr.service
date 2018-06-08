@@ -1,15 +1,10 @@
 [Unit]
-Description=LXC Network
+Description=brmgr
 After=network.target
 Before=lxc.service lxc@.service
 
 [Service]
 Type=simple
-ExecStartPre=/usr/local/lib/lxc-net/bridge-up
-ExecStart=/usr/local/lib/lxc-net/dnsmasq --pid-file
-ExecStartPost=/usr/bin/touch /run/lxc/network_up
-ExecStopPost=/usr/local/lib/lxc-net/bridge-down
-ExecStopPost=/bin/rm -f /run/lxc/network_up
-
-[Install]
-WantedBy=lxc.service lxc@.service
+ExecStartPre=@bindir@/brmgr-pre
+ExecStart=@bindir@/brmgr --pid-file
+ExecStopPost=@bindir@/brmgr-post
