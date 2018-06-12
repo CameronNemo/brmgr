@@ -23,9 +23,13 @@ ip link add dev ${bridge} type bridge || die \
 	"missing bridge support in kernel"
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+echo 0 > /proc/sys/net/ipv6/conf/${bridge}/autoconf
+echo 0 > /proc/sys/net/ipv6/conf/${bridge}/accept_dad || true
 
 test -z "${bridge_mac}" || ip link set dev ${bridge} address ${bridge_mac}
 ip addr add ${addr}/${netmask} dev ${bridge}
+test -z "${addr6}" || ip -6 addr add ${addr6}/${netmask6} dev ${bridge}
 ip link set ${bridge} up
 
 ipt_lock="-w"
@@ -40,3 +44,5 @@ iptables $ipt_lock -I FORWARD -o ${bridge} -j ACCEPT
 iptables $ipt_lock -t nat -A POSTROUTING -s ${network} ! -d ${network} -j MASQUERADE
 iptables $ipt_lock -t mangle -A POSTROUTING -o ${bridge} -p udp -m udp \
 	--dport 68 -j CHECKSUM --checksum-fill
+test -z "${network6}" || ip6tables $ipt_lock -t nat -A POSTROUTING \
+	-s "${network6}" ! -d "${network6}" -j MASQUERADE

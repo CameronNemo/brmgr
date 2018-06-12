@@ -18,8 +18,11 @@ test -n "$bridge" -a -n "$addr" || die \
 
 domain_arg=""
 test -z "$domain" || domain_arg="-s $domain -s /$domain/"
+ipv6_arg=""
+test -z "$addr6" || ipv6_arg="--dhcp-range=${addr6},ra-only --listen-address ${addr6}"
 
 exec dnsmasq $domain_arg -k -o -z -u nobody \
 	-i ${bridge} -I lo -a ${addr} \
-	--conf-file="${dhcp_conffile}" -F "${dhcp_range}" -X ${dhcp_max} -K --dhcp-no-override \
+	--conf-file="${dhcp_conffile}" --dhcp-hostsfile="${dhcp_hostsfile}" \
+	$ipv6_arg -F "${dhcp_range}" -X ${dhcp_max} -K --dhcp-no-override \
 	-l /var/lib/misc/dnsmasq.${bridge}.leases $@
