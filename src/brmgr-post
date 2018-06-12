@@ -22,6 +22,7 @@ fi
 
 # Tear down bridge
 if [ -d /sys/class/net/${bridge} ]; then
+	ip addr flush dev ${bridge}
 	ip link set ${bridge} down
 	ipt_lock="-w"
 	iptables -w -L -n > /dev/null 2>&1 || ipt_lock=""
@@ -39,5 +40,5 @@ if [ -d /sys/class/net/${bridge} ]; then
 		iptables $ipt_lock -t mangle -D POSTROUTING -o ${bridge} -p udp -m udp \
 			--dport 68 -j CHECKSUM --checksum-fill
 	} || true
-	brctl delbr ${bridge}
+	ip link delete ${bridge}
 fi

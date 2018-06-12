@@ -1,6 +1,6 @@
 # brmgr
 
-This project leverages `dnsmasq`, `bridge-utils`, and `iptables` to manage bridge devices.
+This project leverages `dnsmasq`, `iproute2`, and `iptables` to manage bridge devices.
 
 The `brmgr-pre` and `brmgr-post` tools are responsible for creating and tearing down the bridges. The `brmgr` tool is a wrapper around `dnsmasq`, which offers DHCP and DNS services to virtual interfaces connected to the bridge.
 
@@ -20,16 +20,21 @@ If you are also running dnsmasq as a system service, you need to make sure that 
 
 ## Configuring containers to use the bridge
 
-Configure your containers to use the bridge set up by this package by including the following keys:
+Configure a veth interface in your containers and link it to the bridge set up by this package by including the following keys:
 
     lxc.net.0.type = veth
     lxc.net.0.link = brmgr0
-    lxc.net.0.flags = up
     lxc.net.0.name = eth0
     lxc.net.0.hwaddr = ee:ec:fa:e9:56:7d
-    # dhcp! override for static configuration
-    lxc.net.0.ipv4.address = 0.0.0.0
     lxc.net.0.ipv4.gateway = auto
+    lxc.net.0.flags = up
+    # DHCP (default)
+    lxc.net.0.ipv4.address = 0.0.0.0
+    # Have LXC manage the dhclient
+    #lxc.hook.start-host = /usr/share/lxc/hooks/dhclient
+    #lxc.hook.stop = /usr/share/lxc/hooks/dhclient
+    # Static configuration
+    #lxc.net.0.ipv4.address = 10.0.1.2
 
 Or simply:
 
@@ -37,9 +42,11 @@ Or simply:
 
 Where `@install_prefix@` should be `/usr/local` or the option used at install time.
 
-Then, in the guest containers, configure your network interface management for the `eth0` interface. Here is an `ifupdown` snippet for reference:
+Unless you chose to have LXC manage the `dhclient` or are using a static config, you will need to run the dhclient in the guest container. This is often done by network configuration services such as `ifupdown`, `systemd-networkd`, or `NetworkManager`, but in a lightweight container environment these may not be available. It would be best to manage the `dhclient` with a service manager such as runit, Upstart, or systemd, but you can run it from the command line if there is a need:
 
-    iface eth0 inet dhcp
+    /sbin/dhclient
+
+The PID file is stored in `/run/dhclient.pid` by default.
 
 ## Running and using brmgr
 

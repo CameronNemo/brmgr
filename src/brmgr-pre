@@ -19,11 +19,12 @@ test -n "$bridge" -a -n "$addr" -a -n "$netmask" -a -n "$network" || die \
 test ! -d /sys/class/net/${bridge} || die \
 	"bridge already exists, not starting"
 
-brctl addbr ${bridge} || die \
+ip link add dev ${bridge} type bridge || die \
 	"missing bridge support in kernel"
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
+test -z "${bridge_mac}" || ip link set dev ${bridge} address ${bridge_mac}
 ip addr add ${addr}/${netmask} dev ${bridge}
 ip link set ${bridge} up
 
