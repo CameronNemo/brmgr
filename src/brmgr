@@ -1,5 +1,5 @@
 #!/bin/sh
-#  spdx-license-identifier: lgpl-2.1
+# SPDX-license-identifier: LGPL-2.1
 
 set -e
 

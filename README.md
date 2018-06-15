@@ -14,7 +14,7 @@ Accepted configuration options, provided through environment variables, are:
     sysconfdir		default: /etc
     systemdunitdir	default: /lib/systemd/system
 
-Runtime dependencies include: `bridge-utils`, `iptables`, and `dnsmasq-base`.
+Runtime dependencies include: `iproute2`, `iptables`, and `dnsmasq-base`.
 
 If you are also running dnsmasq as a system service, you need to make sure that it is not bound to brmgr's interface. We install a config snippet to achieve this in `/etc/dnsmasq.d`. Make sure your system dnsmasq instance is configured to use the snippet.
 
@@ -46,7 +46,11 @@ Unless you chose to have LXC manage the `dhclient` or are using a static config,
 
     /sbin/dhclient
 
-The PID file is stored in `/run/dhclient.pid` by default.
+The PID file is stored in `/run/dhclient.pid` by default. You may also need to add a nameserver to `/etc/resolv.conf`:
+
+    echo "nameserver [addr]" >> /etc/resolv.conf
+
+Replace `[addr]` with the bridge address configured in `/etc/brmgr.conf`.
 
 ## Running and using brmgr
 

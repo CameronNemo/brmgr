@@ -27,9 +27,9 @@ echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 echo 0 > /proc/sys/net/ipv6/conf/${bridge}/autoconf
 echo 0 > /proc/sys/net/ipv6/conf/${bridge}/accept_dad || true
 
-test -z "${bridge_mac}" || ip link set dev ${bridge} address ${bridge_mac}
 ip addr add ${addr}/${netmask} dev ${bridge}
 test -z "${addr6}" || ip -6 addr add ${addr6}/${netmask6} dev ${bridge}
+test -z "${bridge_mac}" || ip link set dev ${bridge} address ${bridge_mac}
 ip link set ${bridge} up
 
 ipt_lock="-w"

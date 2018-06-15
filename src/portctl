@@ -1,0 +1,71 @@
+#! /bin/sh
+# SPDX-license-identifier: LGPL-2.1
+
+version=""
+
+function usage() {
+  cat <<EOF
+Usage: $(basename ${0}) list|insert|delete [options]
+  list
+  insert [-4|-6] [addr|addr6|lxc_uri] [dest_port] [src_port]
+  delete [-4|-6] [rule_number]
+EOF
+  exit 1
+}
+
+function die() {
+  echo "$(basename ${0}): $@"
+  exit 1
+}
+
+function set_version() {
+  case "$1" in
+    -4) version="" ;;
+    -6) version="6" ;;
+    *) usage ;;
+  esac
+  ipt="ip${version}tables"
+}
+
+function get_addr() {
+  case "$1" in
+    "lxc://"*)
+	    lxc-ls -f | awk -v n=${1#lxc://} '$1 == n { print $5, $6 }' | \
+		    while read four six; do test -z "$version" && echo "$four" || echo "[${six}]" ; done
+	    ;;
+    *) echo "$1" ;;
+  esac
+}
+
+function delete() {
+  rule_no="$1"
+  exec "$ipt" -t nat -D PREROUTING "${rule_no}"
+}
+
+function insert() {
+  addr="$1"
+  dest="${addr}:$2"
+  src_port="$3"
+  exec "$ipt" -t nat -A PREROUTING -p tcp --dport "${src_port}" \
+	  -j DNAT --to-destination "${dest}"
+}
+
+function list() {
+  iptables -t nat --line-numbers -L --numeric
+  ip6tables -t nat --line-numbers -L --numeric
+}
+
+case "$1" in
+  "delete"|"d")
+	  test "$#" = 3 || usage
+	  set_version "$2"
+	  delete "$3"
+	  ;;
+  "insert"|"i")
+	  test "$#" = 5 || usage
+	  set_version "$2"
+	  insert "$(get_addr ${3})" "$4" "$5"
+	  ;;
+  "list") list ;;
+  ""|*)   usage ;;
+esac
