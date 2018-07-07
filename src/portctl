@@ -30,8 +30,13 @@ function set_version() {
 function get_addr() {
   case "$1" in
     "lxc://"*)
-	    lxc-ls -f | awk -v n=${1#lxc://} '$1 == n { print $5, $6 }' | \
+	    lxc-ls -f | awk -v n=${1#lxc://} '$1 == n { print $5, $6 }' | tail -n 1 \
 		    while read four six; do test -z "$version" && echo "$four" || echo "[${six}]" ; done
+	    ;;
+    "lxd://"*)
+	    v="$version" && test -n "$v" || v="4"
+	    ip="$(lxc list ${1#lxd://} --format csv -c ${v} | awk '{ print $1 }' | tail -n 1)"
+	    test "$v" = "4" && echo "$ip" || echo "[${ip}]"
 	    ;;
     *) echo "$1" ;;
   esac
@@ -44,10 +49,12 @@ function delete() {
 
 function insert() {
   addr="$1"
-  dest="${addr}:$2"
+  dest_port="$2"
   src_port="$3"
-  exec "$ipt" -t nat -A PREROUTING -p tcp --dport "${src_port}" \
-	  -j DNAT --to-destination "${dest}"
+  "$ipt" -t nat -A PREROUTING -p tcp --dport "${src_port}" \
+	  -j DNAT --to-destination "${addr}:${dest_port}"
+  # do we need to explicitly accept or can we just delete this?
+  "$ipt" -t nat -A FORWARD -p tcp -d "${addr}" --dport "${dest_port}" -j ACCEPT
 }
 
 function list() {
