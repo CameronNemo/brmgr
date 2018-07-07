@@ -7,7 +7,7 @@ function usage() {
   cat <<EOF
 Usage: $(basename ${0}) list|insert|delete [options]
   list
-  insert [-4|-6] [addr|addr6|lxc_uri] [dest_port] [src_port]
+  insert [-4|-6] [addr|addr6|lxc_uri|lxd_uri] [dest_port] [src_port]
   delete [-4|-6] [rule_number]
 EOF
   exit 1
@@ -30,7 +30,7 @@ function set_version() {
 function get_addr() {
   case "$1" in
     "lxc://"*)
-	    lxc-ls -f | awk -v n=${1#lxc://} '$1 == n { print $5, $6 }' | tail -n 1 \
+	    lxc-ls -f | awk -v n=${1#lxc://} '$1 == n { print $5, $6 }' | tail -n 1 | \
 		    while read four six; do test -z "$version" && echo "$four" || echo "[${six}]" ; done
 	    ;;
     "lxd://"*)
