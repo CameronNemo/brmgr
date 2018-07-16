@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+bridge=${PWD##*-}
+@bindir@/brmgr-pre "$bridge"
+exec @bindir@/brmgr "$bridge" --pid-file

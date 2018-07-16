@@ -5,9 +5,9 @@ Before=lxc.service lxc@.service
 
 [Service]
 Type=simple
-ExecStartPre=@bindir@/brmgr-pre
-ExecStart=@bindir@/brmgr --pid-file
-ExecStopPost=@bindir@/brmgr-post
+ExecStartPre=@bindir@/brmgr-pre %i
+ExecStart=@bindir@/brmgr %i --pid-file
+ExecStopPost=@bindir@/brmgr-post %i
 
 [Install]
 WantedBy=lxc.service lxc@.service

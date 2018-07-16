@@ -3,18 +3,24 @@
 
 set -e
 
+rundir="/run/brmgr"
+
 function die() {
         echo "$(basename ${0}):" $@
         exit 1
 }
 
-etc="/etc/brmgr.conf"
+etc="/etc/brmgr.conf" && test -z "$1" || \
+	etc="/etc/brmgr/${1}.conf"
 
 [ -r "$etc" ] && . "$etc" || die \
-        "could not read configuration file: $etc"
+	"could not read configuration file: $etc"
+
+test "$1" = "$bridge" || die \
+	"bridge configuration does not match filename"
 
 test -n "$bridge" -a -n "$addr" -a -n "$netmask" -a -n "$network" || die \
-        "missing config variable(s)"
+	"missing config variable(s)"
 
 test ! -d /sys/class/net/${bridge} || die \
 	"bridge already exists, not starting"
@@ -46,3 +52,6 @@ iptables $ipt_lock -t mangle -A POSTROUTING -o ${bridge} -p udp -m udp \
 	--dport 68 -j CHECKSUM --checksum-fill
 test -z "${network6}" || ip6tables $ipt_lock -t nat -A POSTROUTING \
 	-s "${network6}" ! -d "${network6}" -j MASQUERADE
+
+install -m 700 -d "$rundir"
+install -m 600 "$etc" "${rundir}/${bridge}"

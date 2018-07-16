@@ -8,13 +8,11 @@ function die() {
         exit 1
 }
 
-etc="/etc/brmgr.conf"
+rundir="/run/brmgr"
+etc="${rundir}/${1}"
 
 [ -r "$etc" ] && . "$etc" || die \
         "could not read configuration file: $etc"
-
-test -n "$bridge" -a -n "$network" || die \
-        "missing config variable(s)"
 
 if ls /sys/class/net/${bridge}/brif/* >/dev/null 2>&1; then
 	die "$bridge has attached interfaces, not shutting it down"

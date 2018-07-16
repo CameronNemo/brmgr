@@ -1,1 +1,4 @@
-config/brmgr.*.out
+config/brmgr.run
+config/brmgr.finish
+config/brmgr.upstart
+config/brmgr@.service

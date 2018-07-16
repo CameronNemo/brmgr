@@ -1,8 +1,0 @@
-description "brmgr: manage bridge devices"
-
-start on static-network-up or runlevel [2345]
-stop on unmounted-remote-filesystems
-
-pre-start exec @bindir@/brmgr-up
-exec @bindir@/brmgr --pid-file
-post-stop exec @bindir@/brmgr-down

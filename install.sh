@@ -7,28 +7,19 @@ test -n "$sysconfdir" || sysconfdir=/etc
 bindir="${install_prefix}/lib/brmgr"
 lxcconfdir="${install_prefix}/share/brmgr"
 
-ensure_dir() {
-	local dir="$1"
-	test -e "$dir" || mkdir -p "$dir"
-	test -d "$dir" || { echo "ERROR: $dir is not a directory"; exit 1; }
-}
+install -m 755 -d "$bindir" "$lxcconfdir" "$systemdunitdir" \
+	"$sysconfdir"/init "$sysconfdir"/dnsmasq.d \
+	"$sysconfdir"/brmgr "$sysconfdir"/sv/brmgr-brmgr0
+install -m 755 -t "$bindir" src/*
 
-ensure_dir "$bindir"
-ensure_dir "$lxcconfdir"
-ensure_dir "$systemdunitdir"
-ensure_dir "$sysconfdir"/init
-ensure_dir "$sysconfdir"/dnsmasq.d
-
-for f in src/*; do
-	cp "$f" "$bindir"
+for f in config/*.in; do
+	sed "s|@bindir@|${bindir}|" "$f" >"${f%%.in}"
 done
 
-for f in config/brmgr.service config/brmgr.upstart; do
-	sed "s|@bindir@|${bindir}|" "$f" >"${f}.out"
-done
-
-cp config/lxc.container.conf "$lxcconfdir"
-cp config/brmgr.service.out "$systemdunitdir"/brmgr.service
-cp config/brmgr.upstart.out "$sysconfdir"/init/brmgr.conf
-cp config/brmgr.conf "$sysconfdir"
-cp config/dnsmasq.d/brmgr.conf "$sysconfdir"/dnsmasq.d/
+install -m 644 -t "$lxcconfdir" config/lxc.container.conf
+install -m 644 -t "$sysconfdir"/dnsmasq.d config/dnsmasq.d/brmgr.conf
+install -m 644 -t "$sysconfdir"/brmgr config/brmgr/brmgr0.conf
+install -m 644 config/brmgr@.service	"$systemdunitdir"/brmgr@.service
+install -m 644 config/brmgr.upstart	"$sysconfdir"/init/brmgr-brmgr0.conf
+install -m 755 config/brmgr.run 	"$sysconfdir"/sv/brmgr-brmgr0/run
+install -m 755 config/brmgr.finish	"$sysconfdir"/sv/brmgr-brmgr0/finish

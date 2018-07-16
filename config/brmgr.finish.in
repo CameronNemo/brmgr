@@ -1,0 +1,3 @@
+#!/bin/sh
+bridge=${PWD##*brmgr-}
+exec @bindir@/brmgr-post "$bridge"

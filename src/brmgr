@@ -8,13 +8,12 @@ function die() {
 	exit 2
 }
 
-etc="/etc/brmgr.conf"
+rundir="/run/brmgr"
+etc="${rundir}/${1}"
+shift
 
 [ -r "$etc" ] && . "$etc" || die \
 	"could not read configuration file: $etc"
-
-test -n "$bridge" -a -n "$addr" || die \
-	"missing config variable(s)"
 
 domain_arg=""
 test -z "$domain" || domain_arg="-s $domain -s /$domain/"

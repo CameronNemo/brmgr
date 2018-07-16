@@ -1,0 +1,10 @@
+description "brmgr: manage bridge devices"
+
+start on runlevel [2345]
+stop on runlevel [016]
+
+instance ${UPSTART_JOB##brmgr-}
+
+pre-start exec @bindir@/brmgr-pre "$UPSTART_INSTANCE"
+exec @bindir@/brmgr "$UPSTART_INSTANCE" --pid-file
+post-stop exec @bindir@/brmgr-post "$UPSTART_INSTANCE"
