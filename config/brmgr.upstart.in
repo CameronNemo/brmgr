@@ -1,10 +1,24 @@
 description "brmgr: manage bridge devices"
 
-start on runlevel [2345]
+start on file FILE="/etc/brmgr/*.conf" EVENT=create
 stop on runlevel [016]
 
-instance ${UPSTART_JOB##brmgr-}
+instance ${MATCH}
 
-pre-start exec @bindir@/brmgr-pre "$UPSTART_INSTANCE"
-exec @bindir@/brmgr "$UPSTART_INSTANCE" --pid-file
-post-stop exec @bindir@/brmgr-post "$UPSTART_INSTANCE"
+pre-start script
+	conf="${MATCH##/etc/brmgr/}"
+	conf="${conf%%.conf}"
+	exec @bindir@/brmgr-pre "$conf"
+end script
+
+script
+	conf="${MATCH##/etc/brmgr/}"
+	conf="${conf%%.conf}"
+	exec @bindir@/brmgr "$conf" --pid-file
+end script
+
+post-stop script
+	conf="${MATCH##/etc/brmgr/}"
+	conf="${conf%%.conf}"
+	exec @bindir@/brmgr-post "$conf"
+end script

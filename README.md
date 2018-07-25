@@ -6,13 +6,7 @@ The `brmgr-pre` and `brmgr-post` tools are responsible for creating and tearing 
 
 ## Installation
 
-To install, just run `./install.sh`.
-
-Accepted configuration options, provided through environment variables, are:
-
-    install_prefix	default: /usr/local
-    sysconfdir		default: /etc
-    systemdunitdir	default: /lib/systemd/system
+To install, just run `make install`. You may wish to change the install prefix, `/usr/local` by default, with the `$PREFIX` environmental variable.
 
 Runtime dependencies include: `iproute2`, `iptables`, and `dnsmasq-base`.
 
@@ -52,7 +46,7 @@ Or simply:
 
     lxc.include = @install_prefix@/share/brmgr/lxc.container.conf
 
-Where `@install_prefix@` should be `/usr/local` or the option used at install time.
+Where `@install_prefix@` is `/usr/local` or the option used at install time.
 
 ### DHCP
 
@@ -75,4 +69,4 @@ Current supported service managers are systemd, Runit, and Upstart. Contribution
     # Runit
     sv up brmgr-brmgr0
     # Upstart
-    start brmgr bridge=brmgr0
+    start brmgr MATCH=/etc/brmgr/brmgr0.conf
