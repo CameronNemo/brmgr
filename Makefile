@@ -10,7 +10,7 @@ DATADIR := $(DESTDIR)$(PREFIX)/share/brmgr
 SYSTEMDUNITDIR := $(DESTDIR)$(PREFIX)/lib/systemd/system
 
 all:
-	$(shell for f in config/*.in; do sed "s|@bindir@|$(PREFIX)/bin|" $${f} >$${f%%.in}; done)
+	$(shell for f in config/*.in; do sed "s|@bindir@|$(PREFIX)/bin|" "$${f}" >"$${f%%.in}"; done)
 
 install: all
 	install -m 755 -d $(DATADIR) $(BINDIR) $(DESTDIR)$(SYSCONFDIR)/brmgr \
@@ -24,3 +24,6 @@ install: all
 	install -m 644 -t $(DATADIR) config/lxc.container.conf
 	install -m 644 -t $(SYSTEMDUNITDIR) config/brmgr@.service
 	install -m 755 -t $(BINDIR) src/*
+
+clean:
+	find config -maxdepth 1 -name 'brmgr*.*' ! -name '*.in' -delete
