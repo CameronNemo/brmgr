@@ -4,17 +4,26 @@
 set -e
 
 rundir="/run/brmgr"
+bridge=
+bridge_mac=
+network=
+addr=
+netmask=
+network=
+addr6=
+netmask6=
+network6=
 
-function die() {
-        echo "$(basename ${0}):" $@
+die() {
+        echo "$(basename "${0}"):" "$@"
         exit 1
 }
 
-etc="/etc/brmgr.conf" && test -z "$1" || \
-	etc="/etc/brmgr/${1}.conf"
-
-[ -r "$etc" ] && . "$etc" || die \
-	"could not read configuration file: $etc"
+test -n "$1" \
+	&& etc="/etc/brmgr/${1}.conf" \
+	&& test -s "$etc" \
+	&& . "$etc" \
+	|| die "could not read configuration file: $etc"
 
 test "$1" = "$bridge" || die \
 	"bridge configuration does not match filename"
@@ -22,33 +31,33 @@ test "$1" = "$bridge" || die \
 test -n "$bridge" -a -n "$addr" -a -n "$netmask" -a -n "$network" || die \
 	"missing config variable(s)"
 
-test ! -d /sys/class/net/${bridge} || die \
+test ! -d /sys/class/net/"${bridge}" || die \
 	"bridge already exists, not starting"
 
-ip link add dev ${bridge} type bridge || die \
+ip link add dev "${bridge}" type bridge || die \
 	"missing bridge support in kernel"
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
-echo 0 > /proc/sys/net/ipv6/conf/${bridge}/autoconf
-echo 0 > /proc/sys/net/ipv6/conf/${bridge}/accept_dad || true
+echo 0 > /proc/sys/net/ipv6/conf/"${bridge}"/autoconf
+echo 0 > /proc/sys/net/ipv6/conf/"${bridge}"/accept_dad || true
 
-ip addr add ${addr}/${netmask} dev ${bridge}
-test -z "${addr6}" || ip -6 addr add ${addr6}/${netmask6} dev ${bridge}
-test -z "${bridge_mac}" || ip link set dev ${bridge} address ${bridge_mac}
-ip link set ${bridge} up
+ip addr add "${addr}/${netmask}" dev "${bridge}"
+test -z "${addr6}" || ip -6 addr add "${addr6}/${netmask6}" dev "${bridge}"
+test -z "${bridge_mac}" || ip link set dev "${bridge}" address "${bridge_mac}"
+ip link set "${bridge}" up
 
 ipt_lock="-w"
 iptables -w -l -n > /dev/null 2>&1 || ipt_lock=""
 
-iptables $ipt_lock -I INPUT -i ${bridge} -p udp --dport 67 -j ACCEPT
-iptables $ipt_lock -I INPUT -i ${bridge} -p tcp --dport 67 -j ACCEPT
-iptables $ipt_lock -I INPUT -i ${bridge} -p udp --dport 53 -j ACCEPT
-iptables $ipt_lock -I INPUT -i ${bridge} -p tcp --dport 53 -j ACCEPT
-iptables $ipt_lock -I FORWARD -i ${bridge} -j ACCEPT
-iptables $ipt_lock -I FORWARD -o ${bridge} -j ACCEPT
-iptables $ipt_lock -t nat -A POSTROUTING -s ${network} ! -d ${network} -j MASQUERADE
-iptables $ipt_lock -t mangle -A POSTROUTING -o ${bridge} -p udp -m udp \
+iptables $ipt_lock -I INPUT -i "${bridge}" -p udp --dport 67 -j ACCEPT
+iptables $ipt_lock -I INPUT -i "${bridge}" -p tcp --dport 67 -j ACCEPT
+iptables $ipt_lock -I INPUT -i "${bridge}" -p udp --dport 53 -j ACCEPT
+iptables $ipt_lock -I INPUT -i "${bridge}" -p tcp --dport 53 -j ACCEPT
+iptables $ipt_lock -I FORWARD -i "${bridge}" -j ACCEPT
+iptables $ipt_lock -I FORWARD -o "${bridge}" -j ACCEPT
+iptables $ipt_lock -t nat -A POSTROUTING -s "${network}" ! -d "${network}" -j MASQUERADE
+iptables $ipt_lock -t mangle -A POSTROUTING -o "${bridge}" -p udp -m udp \
 	--dport 68 -j CHECKSUM --checksum-fill
 test -z "${network6}" || ip6tables $ipt_lock -t nat -A POSTROUTING \
 	-s "${network6}" ! -d "${network6}" -j MASQUERADE

@@ -3,17 +3,27 @@
 
 set -e
 
-function die() {
-	echo "$(basename ${0}):" $@
+die() {
+	echo "$(basename "${0}"):" "$@"
 	exit 2
 }
 
 rundir="/run/brmgr"
+bridge=""
+addr=""
+addr6=""
+dhcp_range=""
+dhcp_max=""
+dhcp_conffile=""
+dhcp_hostsfile=""
+domain=""
 etc="${rundir}/${1}"
+
 shift
 
-[ -r "$etc" ] && . "$etc" || die \
-	"could not read configuration file: $etc"
+test -s "$etc" \
+	&& . "$etc" \
+	|| die "could not read configuration file: $etc"
 
 domain_arg=""
 test -z "$domain" || domain_arg="-s $domain -s /$domain/"
@@ -21,7 +31,7 @@ ipv6_arg=""
 test -z "$addr6" || ipv6_arg="--dhcp-range=${addr6},ra-only --listen-address ${addr6}"
 
 exec dnsmasq $domain_arg -k -o -z -u nobody \
-	-i ${bridge} -I lo -a ${addr} \
+	-i "${bridge}" -I lo -a "${addr}" \
 	--conf-file="${dhcp_conffile}" --dhcp-hostsfile="${dhcp_hostsfile}" \
-	$ipv6_arg -F "${dhcp_range}" -X ${dhcp_max} -K --dhcp-no-override \
-	-l /var/lib/misc/dnsmasq.${bridge}.leases $@
+	$ipv6_arg -F "${dhcp_range}" -X "${dhcp_max}" -K --dhcp-no-override \
+	-l "/var/lib/misc/dnsmasq.${bridge}.leases" "$@"
