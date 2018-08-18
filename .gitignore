@@ -1,4 +1,5 @@
 config/brmgr.run
 config/brmgr.finish
 config/brmgr.upstart
+config/brmgr.openrc
 config/brmgr@.service

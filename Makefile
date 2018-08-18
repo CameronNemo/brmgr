@@ -15,10 +15,12 @@ all:
 install: all
 	install -m 755 -d $(DATADIR) $(BINDIR) $(DESTDIR)$(SYSCONFDIR)/brmgr \
 		$(DESTDIR)$(SYSCONFDIR)/sv/brmgr-brmgr0 $(DESTDIR)$(SYSCONFDIR)/dnsmasq.d \
-		$(DESTDIR)$(SYSCONFDIR)/init $(SYSTEMDUNITDIR)
+		$(DESTDIR)$(SYSCONFDIR)/init $(DESTDIR)$(SYSCONFDIR)/init.d \
+		$(SYSTEMDUNITDIR)
 	install -m 644 config/brmgr.upstart $(DESTDIR)$(SYSCONFDIR)/init/brmgr.conf
 	install -m 755 config/brmgr.run $(DESTDIR)$(SYSCONFDIR)/sv/brmgr-brmgr0/run
 	install -m 755 config/brmgr.finish $(DESTDIR)$(SYSCONFDIR)/sv/brmgr-brmgr0/finish
+	install -m 755 config/brmgr.openrc $(DESTDIR)$(SYSCONFDIR)/init.d/brmgr0
 	install -m 644 -t $(DESTDIR)$(SYSCONFDIR)/brmgr config/brmgr/brmgr0.conf
 	install -m 644 -t $(DESTDIR)$(SYSCONFDIR)/dnsmasq.d config/dnsmasq.d/brmgr.conf
 	install -m 644 -t $(DATADIR) config/lxc.container.conf

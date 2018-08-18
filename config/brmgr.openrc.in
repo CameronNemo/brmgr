@@ -1,0 +1,20 @@
+#!/sbin/openrc-run
+
+pidfile="/var/run/${RC_SVCNAME}.pid"
+command="/usr/bin/brmgr"
+command_args="${RC_SVCNAME} --pid-file"
+command_background=yes
+
+depend() {
+	need net
+}
+
+start_pre() {
+	# call -post to make sure we don't have an existing bridge
+	@bindir@/brmgr-post ${RC_SVCNAME}
+	@bindir@/brmgr-pre ${RC_SVCNAME}
+}
+
+stop_post() {
+	@bindir@/brmgr-post ${RC_SVCNAME}
+}
