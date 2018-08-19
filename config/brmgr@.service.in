@@ -5,6 +5,7 @@ Before=lxc.service lxc@.service
 
 [Service]
 Type=simple
+ExecStartPre=@bindir@/brmgr-post %i
 ExecStartPre=@bindir@/brmgr-pre %i
 ExecStart=@bindir@/brmgr %i --pid-file
 ExecStopPost=@bindir@/brmgr-post %i

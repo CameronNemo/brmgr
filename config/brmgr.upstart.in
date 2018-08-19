@@ -8,6 +8,7 @@ instance ${MATCH}
 pre-start script
 	conf="${MATCH##/etc/brmgr/}"
 	conf="${conf%%.conf}"
+	@bindir@/brmgr-post "$conf"
 	exec @bindir@/brmgr-pre "$conf"
 end script
 

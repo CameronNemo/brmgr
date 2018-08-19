@@ -13,8 +13,8 @@ etc="${rundir}/${1}"
 bridge=
 network=
 
-[ -r "$etc" ] && . "$etc" || die \
-        "could not read configuration file: $etc"
+[ -r "$etc" ] || etc="/etc/brmgr/${1}"
+. "$etc" || die "could not read configuration file: $etc"
 
 if ls /sys/class/net/"${bridge}"/brif/* >/dev/null 2>&1; then
 	die "$bridge has attached interfaces, not shutting it down"

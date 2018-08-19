@@ -46,10 +46,8 @@ insert() {
   addr="$1"
   dest_port="$2"
   src_port="$3"
-  "$ipt" -t nat -A PREROUTING -p tcp --dport "${src_port}" \
+  exec "$ipt" -t nat -A PREROUTING -p tcp --dport "${src_port}" \
 	  -j DNAT --to-destination "${addr}:${dest_port}"
-  # do we need to explicitly accept or can we just delete this?
-  #"$ipt" -t nat -A FORWARD -p tcp -d "${addr}" --dport "${dest_port}" -j ACCEPT
 }
 
 list() {
