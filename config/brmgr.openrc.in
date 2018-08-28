@@ -1,7 +1,7 @@
 #!/sbin/openrc-run
 
 pidfile="/var/run/${RC_SVCNAME}.pid"
-command="/usr/bin/brmgr"
+command="@bindir@/brmgr"
 command_args="${RC_SVCNAME} --pid-file"
 command_background=yes
 

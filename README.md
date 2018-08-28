@@ -62,7 +62,7 @@ Replace `[addr]` with the gateway address.
 
 ## Starting brmgr
 
-Current supported service managers are systemd, Runit, and Upstart. Contributions for OpenRC, LSB init scripts, etc. are very welcome and probably simple to write.
+Current supported service managers are systemd, OpenRC, Runit, and Upstart. Contribution of an LSB init script or similar is quite welcome and probably simple to write.
 
     # systemd
     systemctl start brmgr@brmgr0.service
