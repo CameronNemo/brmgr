@@ -7,7 +7,7 @@ usage() {
   cat <<EOF
 Usage: $(basename "${0}") list|insert|delete [options]
   list
-  insert [-4|-6] [addr|addr6|lxc_uri|lxd_uri] [dest_port] [src_port]
+  insert [-4|-6] [tcp|udp] [addr|addr6|lxc_uri|lxd_uri] [dest_port] [src_port]
   delete [-4|-6] [rule_number]
 EOF
   exit 1
@@ -43,10 +43,11 @@ delete() {
 }
 
 insert() {
-  addr="$1"
-  dest_port="$2"
-  src_port="$3"
-  exec "$ipt" -t nat -A PREROUTING -p tcp --dport "${src_port}" \
+  proto="$1"
+  addr="$2"
+  dest_port="$3"
+  src_port="$4"
+  exec "$ipt" -t nat -A PREROUTING -p "$proto" --dport "${src_port}" \
 	  -j DNAT --to-destination "${addr}:${dest_port}"
 }
 
@@ -62,9 +63,9 @@ case "$1" in
 	  delete "$3"
 	  ;;
   "insert"|"i")
-	  test "$#" = 5 || usage
+	  test "$#" = 6 || usage
 	  set_version "$2"
-	  insert "$(get_addr "${3}")" "$4" "$5"
+	  insert "$3" "$(get_addr "${4}")" "$5" "$6"
 	  ;;
   "list") list ;;
   ""|*)   usage ;;
