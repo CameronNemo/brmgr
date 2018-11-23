@@ -1,32 +1,50 @@
 # brmgr
 
-This project leverages `dnsmasq`, `iproute2`, and `iptables` to manage bridge devices.
+This project leverages `dnsmasq`, `iproute2`, and `iptables` to manage virtual
+bridge devices for use with containers or virtual machines.
 
-The `brmgr-pre` and `brmgr-post` tools are responsible for creating and tearing down the bridges. The `brmgr` tool is a wrapper around `dnsmasq`, which offers DHCP and DNS services to virtual interfaces connected to the bridge.
+The `brmgr-pre` and `brmgr-post` tools are responsible for creating and tearing
+down the bridges. The `brmgr` tool is a wrapper around `dnsmasq`, which offers
+DHCP and DNS services to hosts connected to the bridge.
 
 ## Installation
 
-To install, just run `make install`. You may wish to change the install prefix, `/usr/local` by default, with the `$PREFIX` environmental variable.
+To install, just run `make install`. You may wish to change the install prefix,
+which is `/usr/local` by default, by setting the `$PREFIX` variable.
 
-Runtime dependencies include: `iproute2`, `iptables`, and `dnsmasq-base`.
+    # make install PREFIX=/usr
 
-If you are also running dnsmasq as a system service, you need to make sure that it is not bound to brmgr's interface. We install a config snippet to achieve this in `/etc/dnsmasq.d`. Make sure your system dnsmasq instance is configured to use the snippet.
+Runtime dependencies include: `iproute2`, `iptables`, and `dnsmasq`.
+
+If you are also running dnsmasq as a system service, you need to ensure that it
+does not conflict with brmgr. A config snippet is installed in `/etc/dnsmasq.d`
+to achieve this. Verify that the system dnsmasq instance is configured to use
+the snippet.
 
 ## Configuring the bridge
 
-The default configuration is found at `$sysconfdir/brmgr/brmgr0.conf`. After reviewing it, enable the service:
+The default configuration is found at `$sysconfdir/brmgr/brmgr0.conf`. Review
+and edit it as necessary.
 
-    $ vim /etc/brmgr/brmgr0.conf
-    # systemd
-    $ systemctl enable brmgr@brmgr0.service
-    # Runit
-    $ ln -s /etc/sv/brmgr-brmgr0 /var/service
+    # vim /etc/brmgr/brmgr0.conf
 
-> Note: The default subnet is `10.0.1.0/24`; you may wish to change this and/or add an IPV6 subnet.
+> Note: The default subnet is `10.0.1.0/24`; you may wish to change this and/or
+> add an IPV6 subnet.
+
+When you are ready, enable the service.
+
+With systemd:
+
+    # systemctl enable brmgr@brmgr0.service
+
+Or with runit:
+
+    # ln -s /etc/sv/brmgr-brmgr0 /var/service
 
 ## Configuring containers to use the bridge
 
-Configure a veth interface in your containers and link it to the bridge set up by this package by including the following keys:
+Configure a veth interface in your containers and link it to the bridge set up
+by this package by including the following keys:
 
     lxc.net.0.type = veth
     lxc.net.0.link = brmgr0
@@ -40,7 +58,7 @@ Configure a veth interface in your containers and link it to the bridge set up b
     #lxc.hook.start-host = /usr/share/lxc/hooks/dhclient
     #lxc.hook.stop = /usr/share/lxc/hooks/dhclient
     # Static configuration
-    #lxc.net.0.ipv4.address = 10.0.1.2
+    #lxc.net.0.ipv4.address = 10.0.1.2/24
 
 Or simply:
 
@@ -48,25 +66,51 @@ Or simply:
 
 Where `@install_prefix@` is `/usr/local` or the option used at install time.
 
+## Configuring QEMU/KVM to use the bridge
+
+To use the bridge with QEMU, add the following to the command arguments:
+
+    -netdev bridge,id=lan0,br=brmgr0 -device virtio-net-pci,netdev=lan0
+
+If you are running your VMs as an unprivileged user, you must add the line
+
+    allow brmgr0
+
+to `/etc/qemu/bridge.conf`.
+
+Replace `brmgr0` with the name of the bridge you configured, if necessary.
+
 ### DHCP
 
-Unless you chose to have LXC manage the `dhclient` or are using a static config, you will need to run the dhclient in the guest container. This is often done by network configuration services such as `ifupdown`, `systemd-networkd`, or `NetworkManager`, but in a lightweight container environment these may not be available. It would be best to manage the `dhclient` with a service manager such as runit, Upstart, or systemd, but you can run it from the command line if there is a need:
+Unless LXC is managing `dhclient` or a static IP is in use, a DHCP client will
+need to run in the guest. This is often done by network configuration services
+such as `dhcpcd`, `ifupdown`, `systemd-networkd`, or `NetworkManager`, but in a
+lightweight container environment these may not be available.
 
-    /sbin/dhclient
+It would be best to manage the `dhclient` with a service manager such as
+systemd or runit, but you can run it from the command line if necessary.
 
-The PID file is stored in `/run/dhclient.pid` by default. You may also need to add a nameserver to `/etc/resolv.conf`:
+    # dhclient
 
-    echo "nameserver [addr]" >> /etc/resolv.conf
+You may also need to add a nameserver to `/etc/resolv.conf`:
 
-Replace `[addr]` with the gateway address.
+    # echo "nameserver [addr]" >> /etc/resolv.conf
+
+Replace `[addr]` with the gateway address (address of the bridge).
 
 ## Starting brmgr
 
-Current supported service managers are systemd, OpenRC, Runit, and Upstart. Contribution of an LSB init script or similar is quite welcome and probably simple to write.
+Current supported service managers are systemd, OpenRC, Runit, and Upstart.
+Contribution of an LSB init script is quite welcome and likely simple to write.
 
-    # systemd
-    systemctl start brmgr@brmgr0.service
-    # Runit
-    sv up brmgr-brmgr0
-    # Upstart
-    start brmgr MATCH=/etc/brmgr/brmgr0.conf
+With systemd:
+
+    # systemctl start brmgr@brmgr0.service
+
+With runit:
+
+    # sv up brmgr-brmgr0
+
+With Upstart:
+
+    # start brmgr MATCH=/etc/brmgr/brmgr0.conf
